@@ -1,0 +1,35 @@
+#### jungdo exercise
+# read data 
+data <- read.table(file = "clipboard", sep="\t", header=T)
+
+# calibration
+caldates <- calibrate(data$bp, data$error, calcurves="intcal20")
+spd.caldates <- spd(caldates, timeRange=c(4000,2000)) # spd
+plot(spd.caldates)
+
+# 단계별 SPD 작성 후 합치기
+jungdo1 <- subset(data,category=="1")
+jungdo2 <- subset(data,category=="2")
+jungdo3 <- subset(data,category=="3")
+jungdo4 <- subset(data,category=="4")
+
+caldates.j1 <- calibrate(jungdo1$bp, jungdo1$error, calcurves="intcal20")
+spd.caldates.j1 <- spd(caldates.j1, timeRange=c(4000,2000)) # spd
+plot(spd.caldates.j1)
+
+caldates.j2 <- calibrate(jungdo2$bp, jungdo2$error, calcurves="intcal20")
+spd.caldates.j2 <- spd(caldates.j2, timeRange=c(4000,2000)) # spd
+plot(spd.caldates.j2)
+
+caldates.j3 <- calibrate(jungdo3$bp, jungdo3$error, calcurves="intcal20")
+spd.caldates.j3 <- spd(caldates.j3, timeRange=c(4000,2000)) # spd
+plot(spd.caldates.j3)
+
+caldates.j4 <- calibrate(jungdo4$bp, jungdo4$error, calcurves="intcal20")
+spd.caldates.j4 <- spd(caldates.j4, timeRange=c(4000,2000)) # spd
+plot(spd.caldates.j4)
+
+plot(spd.caldates[[2]]$calBP, spd.caldates[[2]]$PrDens, type='h', xlim=c(4000,2000), col = 'grey')
+lines(spd.caldates.j1[[2]]$calBP, spd.caldates.j1[[2]]$PrDens + spd.caldates.j2[[2]]$PrDens + spd.caldates.j3[[2]]$PrDens, type='h', col='red')
+lines(spd.caldates.j1[[2]]$calBP, spd.caldates.j1[[2]]$PrDens + spd.caldates.j2[[2]]$PrDens, type='h', col='blue')
+lines(spd.caldates.j1[[2]]$calBP, spd.caldates.j1[[2]]$PrDens, type='h', col='purple')
