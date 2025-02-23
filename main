@@ -1,0 +1,69 @@
+# 2025-02-24 실습자료
+
+## 0. 패키지 설치 및 부착
+#install.packages("rcarbon")
+library(rcarbon)
+
+## 1. 연대보정(Calibration)
+a <- 3000 # 미보정 bp연대 설정
+b <- 30 # 표준오차 설정
+result <- calibrate(3000, 30, "intcal20")
+# calibrate 함수를 이용하여 a ± b 연대를 intcal20 곡선을 이용하여 보정.
+
+plot(result) # 보정 결과를 그래프로 표시
+summary(result) # 보정 결과 주요 수치를 표시
+  
+## 2. R-Combine
+a <- c(2820,2800,2720)
+b <- c(30,30,30)
+poolDates(a, b)
+
+## 3. Sum
+a <- c(2820,2800,2720)
+b <- c(30,30,30)
+caldates <- calibrate(a, b, calcurves="intcal20")
+spd.caldates <- spd(caldates, timeRange=c(3200,2700)) # spd
+plot(spd.caldates)
+
+## 3-1. data 불러와서 spd 작성하기
+## data 불러오기. 실습 데이터. euroevol
+data(euroevol)
+unique(euroevol$Country)
+
+DK=subset(euroevol,Country=="Denmark") #subset of Danish dates
+DK=subset(DK,C14Age < 5000) # n = 522
+DK.caldates=calibrate(DK$C14Age,DK$C14SD,calCurves='intcal20') # do calibrate
+DK.spd = spd(DK.caldates,timeRange=c(8000,300)) # spd
+
+sum(DK.spd[[2]]$PrDens) # SUM 확인.
+
+plot(DK.spd)
+plot(DK.spd,runm=200) # smoothing by 200 years
+plot(DK.spd, calendar='BP', type='simple') # line 
+plot(DK.spd, calendar='BP', type='standard') # area
+
+plot(DK.spd, calendar='BP', spdnormalised= T) # area
+
+plot(DK.spd, calendar='BP', type='standard')
+plot(DK.spd, calendar='BP', type='simple', col=1,lwd=1.5,lty=1, runm=200, add=T) # spd 작성까지 완료.
+
+# 확률분포도 추출. sum(DK.spd[[2]]$PrDens)
+plot(DK.spd[[2]]$PrDens, type='h')
+plot(DK.spd[[2]]$calBP, DK.spd[[2]]$PrDens, type='h')
+plot(DK.spd[[2]]$calBP, DK.spd[[2]]$PrDens, type='h', xlim=c(7000,3000))
+
+
+
+## binprep, binning 사전작업
+DK.bin <- binPrep(sites=DK$SiteID,ages=DK$C14Age, h=100) # bin 개념.
+length(unique(DK.bin)) # 332
+
+## model test, 모델링
+exp.DK <- modelTest(DK.caldates, errors=DK$C14SD, nsim=10, runm=10, timeRange=c(6000,4000), 
+                    backsight = 10, raw=T, model='exponential', edgeSize=0, ncores = 2) # bins 없을 때. # 구동 12:01
+plot(exp.DK, main='DK_exponential_nsim10')
+
+# bin 적용 모델링
+exp.bin.DK <- modelTest(DK.caldates, errors=DK$C14SD, nsim=100, runm=200, timeRange=c(6000,4000), bin=DK.bin,
+                        backsight = 10, raw=T, model='exponential', ncores = 2)
+plot(exp.bin.DK, main='DK_exponential_nsim100 with bin')
